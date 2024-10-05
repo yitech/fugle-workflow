@@ -68,7 +68,7 @@ After setting up the environment, you can interact with the data pipeline throug
 ```plaintext
 fugle-workflow/
 │
-├── kestra/                # Kestra pipeline definitions
+├── scheduler/             # Kestra pipeline definitions
 ├── postgres-rest/         # Postgres REST API setup and configuration
 ├── config.yaml            # Main configuration file for the workflow
 ├── docker-compose.yml     # Docker Compose setup for all services
