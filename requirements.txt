@@ -3,3 +3,5 @@ Alembic
 psycopg2-binary
 # Environment variable management
 python-dotenv
+loguru
+requests
