@@ -21,7 +21,7 @@ def main(from_date: str, to_date: datetime, symbol: datetime, dry_run: bool):
                                             "select": "symbol",
                                             "symbol": f"eq.{symbol}"
                                         })
-    if status_code > 299 or len(response) == 0:
+    if status_code > 299 or status_code < 200:
         logger.error("Failed to fetch metadata")
         return
     date = from_date
@@ -34,25 +34,23 @@ def main(from_date: str, to_date: datetime, symbol: datetime, dry_run: bool):
             "from_date": date.strftime('%Y-%m-%d'),
             "to_date": next_date.strftime('%Y-%m-%d')
         })
+        logger.info(f"{status_code=}, {response=}")
         time.sleep(1) # 60 requests per minute
         if status_code > 299:
             logger.error(f"Failed to fetch candles, status code: {status_code}, {response}")
             return
         if not dry_run:        
             for data in response['data'][::-1]:
-                status_code, response = client.get(Utils.POSTREST_URL, "/kline", {
+                status_code, query_result = client.get(Utils.POSTREST_URL, "/kline", {
                     "select": "symbol",
                     "symbol": f"eq.{symbol}",
                     "date": f"eq.{data['date']}"
                 })
-                if status_code > 299:
-                    logger.info(f"Failed to fetch kline, status code: {status_code}, {response}")
-                    return
-                if len(response) > 0:
+                if len(query_result) > 0:
                     logger.info(f"Data for {symbol} on {data['date']} already exists")
                     continue
                 # Insert data into the database
-                client.post(Utils.POSTREST_URL, "/kline", {
+                payload = {
                     "symbol": symbol,
                     "date": data['date'],
                     "open": data['open'],
@@ -60,7 +58,12 @@ def main(from_date: str, to_date: datetime, symbol: datetime, dry_run: bool):
                     "low": data['low'],
                     "close": data['close'],
                     "volume": data['volume'],
-                })
+                }
+                headers = {
+                    "Content-Type": "application/json",
+                    "Prefer": "return=representation"
+                }
+                status_code, _ = client.post(Utils.POSTREST_URL, "/kline", payload, headers)
                 time.sleep(0.2)
         logger.info(f"Inserting data {len(response['data'])} into the database")
         date = next_date + timedelta(days=1)

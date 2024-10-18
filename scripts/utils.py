@@ -24,41 +24,38 @@ class Utils:
         else:
             logger.error("Login failed!")
             raise Exception("Login failed!")
-    
-    def get(self, bath_url, path, params=None):
-        endpoint = bath_url + path
-        logger.info(f"Fetching data from: {endpoint}")
-        response = self.session.get(endpoint, params=params)
-        if  response.status_code > 299 or response.status_code < 200:
-            logger.error(f"status code: {response.status_code}), method: GET, endpoint: {endpoint}, params: {params}")
-            return response.status_code, {}
-        return response.status_code, response.json()
-    
-    def post(self, bath_url, path, data):
-        endpoint = bath_url + path
-        logger.info(f"Create data to: {endpoint}")
-        response = self.session.post(endpoint, json=data)
-        if  response.status_code > 299 or response.status_code < 200:
-            logger.error(f"status code: {response.status_code}), method: POST, endpoint: {endpoint}, data: {data}")
-            return response.status_code, {}
-        return response.status_code, response.json()
-    
-    def put(self, bath_url, path, data):
-        endpoint = bath_url + path
-        logger.info(f"Update data to: {endpoint}")
-        response = self.session.put(endpoint, json=data)
-        if  response.status_code > 299 or response.status_code < 200:
-            logger.error(f"status code: {response.status_code}), method: PUT, endpoint: {endpoint}, data: {data}")
-            return response.status_code, {}
-        return response.status_code, response.json()
-    
-    def delete(self, bath_url, path, data):
-        endpoint = bath_url + path
-        logger.info(f"Delete data from: {endpoint}")
-        response = self.session.delete(endpoint, params=data)
-        if  response.status_code > 299 or response.status_code < 200:
-            logger.error(f"status code: {response.status_code}), method: DELETE, endpoint: {endpoint}, data: {data}")
-            return response.status_code, {}
-        return response.status_code, response.json()
+        
+    def make_request(self, method, base_url, path, data=None, params=None, headers={}):
+        endpoint = base_url + path
+        headers = headers | {"Content-Type": "application/json"}
+        logger.info(f"{method.upper()} request to: {endpoint}")
 
+        # Determine the appropriate method to call
+        request_method = getattr(self.session, method)
+        logger.info(f"{method=}, {endpoint=}, {data=}, {params=}, {headers=}")
+        response = request_method(endpoint, json=data, params=params, headers=headers)
+
+        # Check for no content status
+        if response.status_code == 204:
+            logger.info(f"No content returned from: {endpoint}")
+            return response.status_code, {}
+        elif response.status_code < 200 or response.status_code > 299:
+            logger.error(f"status code: {response.status_code}), method: {method.upper()}, endpoint: {endpoint}, data: {data}, params: {params}")
+            return response.status_code, {}
+        else:
+            return response.status_code, response.json()
     
+    # Wrapper methods
+    def get(self, base_url, path, params=None, headers={}):
+        return self.make_request('get', base_url, path, params=params, headers=headers)
+
+    def post(self, base_url, path, data, headers={}):
+        return self.make_request('post', base_url, path, data=data, headers=headers)
+
+    def put(self, base_url, path, data, headers={}):
+        return self.make_request('put', base_url, path, data=data, headers=headers)
+
+    def delete(self, base_url, path, data=None, headers={}):
+        return self.make_request('delete', base_url, path, data=data, headers=headers)
+
+
