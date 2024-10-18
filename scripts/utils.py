@@ -35,12 +35,17 @@ class Utils:
         endpoint = bath_url + path
         logger.info(f"Create data to: {endpoint}")
         response = self.session.post(endpoint, json=data)
+        logger.info(f"Response: {response}")
         return response.status_code, response.json()
     
     def put(self, bath_url, path, data):
         endpoint = bath_url + path
         logger.info(f"Update data to: {endpoint}")
         response = self.session.put(endpoint, json=data)
+        if  200 <= response.status_code <= 299:
+            logger.error(f"Failed to update data, status code: {response.status_code}), 
+                         method: PUT, endpoint: {endpoint}, data: {data}")
+            return response.status_code, {}
         return response.status_code, response.json()
     
     def delete(self, bath_url, path):

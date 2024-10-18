@@ -40,8 +40,19 @@ def main(from_date: str, to_date: datetime, symbol: datetime, dry_run: bool):
             return
         if not dry_run:        
             for data in response['data'][::-1]:
+                status_code, response = client.get(Utils.POSTREST_URL, "/kline", {
+                    "select": "symbol",
+                    "symbol": f"eq.{symbol}",
+                    "date": f"eq.{data['date']}"
+                })
+                if status_code > 299:
+                    logger.info(f"Failed to fetch kline, status code: {status_code}, {response}")
+                    return
+                if len(response) > 0:
+                    logger.info(f"Data for {symbol} on {data['date']} already exists")
+                    continue
                 # Insert data into the database
-                client.post(Utils.POSTREST_URL, "/klines", {
+                client.post(Utils.POSTREST_URL, "/kline", {
                     "symbol": symbol,
                     "date": data['date'],
                     "open": data['open'],
@@ -50,7 +61,7 @@ def main(from_date: str, to_date: datetime, symbol: datetime, dry_run: bool):
                     "close": data['close'],
                     "volume": data['volume'],
                 })
-                time.sleep(0.1)
+                time.sleep(0.2)
         logger.info(f"Inserting data {len(response['data'])} into the database")
         date = next_date + timedelta(days=1)
         
