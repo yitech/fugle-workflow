@@ -163,3 +163,7 @@ cython_debug/
 
 # HTTP plugin
 *.http
+
+# openapi json
+fugledata-go
+openapitools.json
