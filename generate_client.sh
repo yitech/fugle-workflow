@@ -19,7 +19,7 @@ generate_client() {
     fi
 
     # Step 2: Generate initial client library from the local OpenAPI server
-    openapi-generator-cli generate -i https://postgrest.lynxlinkage.com \
+    openapi-generator-cli generate -i http://localhost:3000 \
         -g "$language" \
         -o "./$output_dir" \
         --package-name "$package_name" \
