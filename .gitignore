@@ -166,4 +166,5 @@ cython_debug/
 
 # openapi json
 fugledata-go
+fugledata-py
 openapitools.json
